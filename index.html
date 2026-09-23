@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Medical Genetics — Bloom's Blitz</title>
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --bg: #f4f6fb;
+    --card-bg: #ffffff;
+    --text: #10131a;
+    --text-muted: #62697b;
+    --border: #e3e6ee;
+    --accent: #5b5ff0;
+    --accent-soft: #eceafe;
+    --correct: #16a34a;
+    --correct-soft: #dcfce7;
+    --incorrect: #dc2626;
+    --incorrect-soft: #fee2e2;
+    --remember: #3b82f6;
+    --understand: #06b6d4;
+    --apply: #16a34a;
+    --analyze: #d97706;
+    --evaluate: #9333ea;
+    --create: #e11d48;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1117;
+      --card-bg: #161b25;
+      --text: #eef1f7;
+      --text-muted: #97a0b5;
+      --border: #2a3140;
+      --accent-soft: #232244;
+      --correct-soft: #123821;
+      --incorrect-soft: #3a1418;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1117;
+    --card-bg: #161b25;
+    --text: #eef1f7;
+    --text-muted: #97a0b5;
+    --border: #2a3140;
+    --accent-soft: #232244;
+    --correct-soft: #123821;
+    --incorrect-soft: #3a1418;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: max(16px, env(safe-area-inset-top, 0px)) 16px max(24px, env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .brand { text-align: center; padding: 6px 0 14px; }
+  .brand h1 { font-size: clamp(1.05rem, 5vw, 1.35rem); margin: 0 0 4px; letter-spacing: -0.01em; }
+  .brand p { margin: 0; color: var(--text-muted); font-size: 0.85rem; }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .start-list { text-align: left; margin: 16px 0 20px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .start-list li { display: flex; gap: 10px; font-size: 0.92rem; color: var(--text); align-items: flex-start; }
+  .start-list li .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 6px; }
+  .name-tag { color: var(--accent); font-weight: 700; }
+  button.primary-btn {
+    width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 14px;
+    padding: 15px; font-size: 1rem; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  button.primary-btn:active { opacity: 0.85; }
+  button.ghost-btn {
+    width: 100%; background: transparent; color: var(--accent); border: 1px solid var(--border);
+    border-radius: 14px; padding: 13px; font-size: 0.92rem; font-weight: 600; cursor: pointer; margin-top: 10px;
+  }
+  button.retry-btn {
+    width: 100%; background: var(--analyze); color: #fff; border: none; border-radius: 14px;
+    padding: 15px; font-size: 0.98rem; font-weight: 700; cursor: pointer; margin-bottom: 10px;
+  }
+  .topbar { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .topbar-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: var(--text-muted); font-weight: 600; }
+  .progress-track { height: 6px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.25s ease; }
+  .timer-row { display: flex; align-items: center; gap: 8px; }
+  .timer-track { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .timer-fill { height: 100%; border-radius: 4px; transition: width 1s linear, background 0.3s ease; background: var(--apply); }
+  .timer-num { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 0.85rem; min-width: 30px; text-align: right; }
+  .badges { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .badge { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; color: #fff; }
+  .badge.topic { background: transparent; color: var(--text-muted); border: 1px solid var(--border); text-transform: none; font-weight: 600; letter-spacing: 0; }
+  .badge.retry-tag { background: var(--analyze); }
+  .qtext { font-size: 1.02rem; line-height: 1.45; font-weight: 650; margin: 0 0 16px; }
+  .options { display: flex; flex-direction: column; gap: 9px; }
+  .option-btn {
+    text-align: left; border: 1.5px solid var(--border); background: var(--card-bg); color: var(--text);
+    border-radius: 13px; padding: 13px 14px; font-size: 0.92rem; line-height: 1.35;
+    display: flex; gap: 10px; align-items: flex-start; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .option-btn .letter {
+    flex: none; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 800; color: var(--text-muted);
+  }
+  .option-btn.correct { background: var(--correct-soft); border-color: var(--correct); }
+  .option-btn.correct .letter { background: var(--correct); border-color: var(--correct); color: #fff; }
+  .option-btn.incorrect { background: var(--incorrect-soft); border-color: var(--incorrect); }
+  .option-btn.incorrect .letter { background: var(--incorrect); border-color: var(--incorrect); color: #fff; }
+  .option-btn.dim { opacity: 0.55; }
+  .feedback-line { margin-top: 14px; font-size: 0.82rem; font-weight: 700; text-align: center; min-height: 18px; }
+  .feedback-line.ok { color: var(--correct); }
+  .feedback-line.no { color: var(--incorrect); }
+  .score-hero { text-align: center; padding: 6px 0 4px; }
+  .score-hero .hero-label { font-weight: 700; color: var(--text-muted); font-size: 0.85rem; }
+  .score-hero .big { font-size: 3rem; font-weight: 800; line-height: 1; color: var(--accent); }
+  .score-hero .pct { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 18px 0; }
+  .stat-cell { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+  .stat-cell .lvl { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+  .stat-cell .num { font-size: 1.1rem; font-weight: 800; margin-top: 2px; }
+  .review-title { font-size: 0.85rem; font-weight: 800; margin: 18px 0 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+  .review-item { border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 8px; }
+  .review-item .rq { font-size: 0.88rem; font-weight: 650; margin-bottom: 6px; }
+  .review-item .ra { font-size: 0.82rem; color: var(--correct); }
+  .review-item .rt { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+  .hidden { display: none !important; }
+  .footer-note { text-align: center; color: var(--text-muted); font-size: 0.72rem; margin-top: 14px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="brand">
+    <h1>🧬 Medical Genetics — Bloom's Blitz</h1>
+    <p>Foundation Course (SMS 111)</p>
+  </div>
+
+  <div id="startScreen" class="card">
+    <p style="margin:0 0 6px; font-weight:800; font-size:1.05rem;">Round two, <span class="name-tag">Prince</span> 👀</p>
+    <p style="margin:0; color:var(--text-muted); font-size:0.9rem;">Straight from the lecture: chromosomes &amp; the cell cycle, Mendel's Laws, sex determination &amp; gene interaction, and cytogenetics — across <b>every level of Bloom's taxonomy</b>.</p>
+    <ul class="start-list">
+      <li><span class="dot"></span>100 questions: Remember, Understand, Apply, Analyze, Evaluate &amp; Create</li>
+      <li><span class="dot"></span>60 seconds per question — no answer, no marks, it moves on</li>
+      <li><span class="dot"></span>Answer (right or wrong) and it reveals the answer, then auto-advances</li>
+      <li><span class="dot"></span>No going back mid-quiz — but once you finish, you can retry just the ones you missed, as many rounds as it takes</li>
+    </ul>
+    <button class="primary-btn" id="startBtn">Start the Blitz</button>
+  </div>
+
+  <div id="quizScreen" class="hidden">
+    <div class="topbar">
+      <div class="topbar-row">
+        <span id="qCounter">Question 1 of 100</span>
+        <span id="scoreLive">Score: 0</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="timer-row">
+        <div class="timer-track"><div class="timer-fill" id="timerFill" style="width:100%"></div></div>
+        <span class="timer-num" id="timerNum">60s</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="badges">
+        <span class="badge" id="levelBadge">Remember</span>
+        <span class="badge topic" id="topicBadge">Cell &amp; Chromosome Basics</span>
+        <span class="badge retry-tag hidden" id="retryBadge">Retry Round</span>
+      </div>
+      <p class="qtext" id="qText"></p>
+      <div class="options" id="optionsWrap"></div>
+      <div class="feedback-line" id="feedbackLine"></div>
+    </div>
+  </div>
+
+  <div id="resultsScreen" class="hidden">
+    <div class="card">
+      <div class="score-hero">
+        <div class="hero-label" id="heroLabel">Prince's final score</div>
+        <div class="big"><span id="finalScore">0</span><span id="finalDenom">/100</span></div>
+        <div class="pct" id="finalPct">0%</div>
+      </div>
+      <div class="stats-grid" id="statsGrid"></div>
+      <div id="reviewBlock"></div>
+      <div id="actionButtons" style="margin-top:6px;"></div>
+    </div>
+    <p class="footer-note">Level breakdown reflects the original 100-question run. Retry rounds chip away at what's still missed.</p>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  // Every question's o[0] is the correct answer. Options are shuffled at render time.
+  var LEVEL_COLOR = {
+    "Remember": "var(--remember)", "Understand": "var(--understand)", "Apply": "var(--apply)",
+    "Analyze": "var(--analyze)", "Evaluate": "var(--evaluate)", "Create": "var(--create)"
+  };
+
+  var QUESTIONS = [
+    {l:"Remember", t:"Cell & Chromosome Basics", q:`What is a chromosome, as defined in the lecture?`, o:[`A package of DNA containing part or all of the genetic material of an organism`,`A single gene responsible for one trait`,`A type of RNA molecule found only in the nucleus`,`A protein that has no association with DNA`]},
+    {l:"Remember", t:"Cell & Chromosome Basics", q:`In prokaryotic cells, DNA is organized into which structure, since prokaryotes lack a nucleus?`, o:[`The nucleoid`,`The nucleus`,`The histone complex`,`The centromere`]},
+    {l:"Remember", t:"Cell & Chromosome Basics", q:`Which phase of the cell cycle is the "synthesis" phase, in which genetic material is duplicated?`, o:[`S phase`,`G1 phase`,`G2 phase`,`M phase`]},
+    {l:"Understand", t:"Cell & Chromosome Basics", q:`Why are histones considered the most important nucleosome-forming packaging proteins in eukaryotic cells?`, o:[`With help from chaperone proteins, they bind to and condense the DNA molecule to maintain its integrity`,`They replace DNA entirely during cell division`,`They are only found in prokaryotic nucleoids`,`They prevent any three-dimensional chromosome structure from forming`]},
+    {l:"Understand", t:"Cell & Chromosome Basics", q:`Why does the eukaryotic chromosome's complex three-dimensional structure matter functionally?`, o:[`It plays a significant role in transcriptional regulation`,`It has no functional significance at all`,`It only matters during prokaryotic cell division`,`It exists solely to shorten the DNA fiber for storage`]},
+    {l:"Understand", t:"Cell & Chromosome Basics", q:`Why does the cell cycle include two separate "gap" phases (G1 and G2) alongside S and M phases?`, o:[`They represent distinct stages within the sequence that actively dividing eukaryotic cells pass through, surrounding DNA synthesis and mitosis`,`G1 and G2 are alternative names for the same phase`,`Gap phases only occur in prokaryotic cells`,`Gap phases replace the need for an M phase entirely`]},
+    {l:"Apply", t:"Cell & Chromosome Basics", q:`A cell is actively duplicating its genetic material in preparation for division, but mitosis hasn't started yet. Which cell cycle phase is it in?`, o:[`S phase`,`M phase`,`G1 phase only, with no synthesis`,`This cannot occur, since duplication only happens during M phase`]},
+    {l:"Apply", t:"Cell & Chromosome Basics", q:`A microbiologist examines a bacterial cell and looks for its genetic material. Where should they expect to find the DNA organized?`, o:[`Within the nucleoid, a distinct region of the bacterial cell`,`Within a membrane-bound nucleus`,`Bound entirely to histone proteins`,`Outside the cell in the extracellular matrix`]},
+    {l:"Apply", t:"Cell & Chromosome Basics", q:`A researcher wants to study how chaperone proteins contribute to genome integrity. Which process should they investigate, based on the lecture?`, o:[`How chaperone proteins help histones bind to and condense DNA`,`How chaperone proteins replace DNA during replication`,`How chaperone proteins form the nucleoid in prokaryotes`,`How chaperone proteins carry out mitosis independently of chromosomes`]},
+    {l:"Analyze", t:"Cell & Chromosome Basics", q:`Comparing prokaryotic and eukaryotic DNA organization, what is the key structural distinction from the lecture?`, o:[`Prokaryotic DNA is organized in a nucleoid with no surrounding nucleus, while eukaryotic DNA is packaged within a nucleus`,`Both organize DNA identically within a membrane-bound nucleus`,`Eukaryotes lack any DNA-organizing structure at all`,`Prokaryotic DNA is packaged by histones exclusively, unlike eukaryotic DNA`]},
+    {l:"Analyze", t:"Cell & Chromosome Basics", q:`The M phase "partitions the genetic material and the cell divides." What does this imply about the order of S phase and M phase?`, o:[`S phase must occur before M phase, since genetic material must be duplicated before it can be partitioned`,`M phase always precedes S phase`,`S and M phases occur simultaneously in all cells`,`There is no required order between S and M phases`]},
+    {l:"Analyze", t:"Cell & Chromosome Basics", q:`Why might a defect in chaperone-assisted histone binding be expected to compromise chromosome integrity?`, o:[`Because these proteins are described as responsible for condensing and maintaining the integrity of the DNA molecule`,`Because chaperone proteins have no described role in chromosome integrity`,`Because histones are unrelated to DNA condensation`,`Because chromosome integrity depends only on the nucleoid, not histones`]},
+    {l:"Evaluate", t:"Cell & Chromosome Basics", q:`A student claims "prokaryotes and eukaryotes package their DNA in essentially the same way, just with different names." Evaluate this.`, o:[`Weak — eukaryotic DNA is packaged within a true nucleus using histones, while prokaryotic DNA lacks a nucleus and sits in a nucleoid, a meaningfully different arrangement`,`Correct — both structures are functionally and structurally identical`,`Correct — histones are described as present equally in both prokaryotes and eukaryotes`,`Irrelevant — DNA packaging has no bearing on cell type`]},
+    {l:"Evaluate", t:"Cell & Chromosome Basics", q:`"The cell cycle's gap phases (G1, G2) serve no real purpose since only DNA synthesis and mitosis matter." Assess this against the lecture.`, o:[`Flawed — the lecture describes G1 and G2 as recognized stages within the cell cycle sequence, alongside S and M`,`Valid — G1 and G2 are not mentioned in the lecture at all`,`Valid — only S and M phases are described as occurring in real cells`,`Irrelevant — the cell cycle has no defined phases`]},
+    {l:"Create", t:"Cell & Chromosome Basics", q:`Designing a flowchart of the eukaryotic cell cycle, which sequence correctly represents the lecture's order?`, o:[`G1 → S → G2 → M`,`M → S → G1 → G2`,`S → G1 → M → G2`,`G2 → G1 → S → M`]},
+    {l:"Create", t:"Cell & Chromosome Basics", q:`Constructing a comparison chart of "DNA housing structure," which pairing is correct?`, o:[`Prokaryotes: nucleoid; Eukaryotes: nucleus`,`Prokaryotes: nucleus; Eukaryotes: nucleoid`,`Both: nucleoid`,`Both: nucleus`]},
+
+    {l:"Remember", t:"Mendelian Genetics", q:`Who is credited with setting the framework for genetics and formulating Mendel's Laws?`, o:[`Johann Gregor Mendel`,`Charles Darwin`,`James Watson`,`Rosalind Franklin`]},
+    {l:"Remember", t:"Mendelian Genetics", q:`What organism did Mendel use as his model organism?`, o:[`Garden pea plants`,`Fruit flies`,`Mice`,`Bacteria`]},
+    {l:"Remember", t:"Mendelian Genetics", q:`In Mendel's cross notation, what does "F1" refer to?`, o:[`The first-generation offspring`,`The parental generation`,`The second-generation offspring`,`A recessive allele`]},
+    {l:"Remember", t:"Mendelian Genetics", q:`What term describes an organism that produces pure offspring, manifesting only one feature consistently across generations?`, o:[`A true-breeding organism`,`A heterozygous organism`,`A pleiotropic organism`,`A polyploid organism`]},
+    {l:"Remember", t:"Mendelian Genetics", q:`In standard genetics notation, how is a dominant allele typically represented?`, o:[`An uppercase letter`,`A lowercase letter`,`A Greek symbol`,`A number`]},
+    {l:"Understand", t:"Mendelian Genetics", q:`Why were Mendel's true-breeding pea plants useful for demonstrating inheritance patterns?`, o:[`They consistently produced offspring with only one form of a trait, making inherited patterns easier to track across generations`,`They never reproduced sexually`,`They had no observable heritable traits`,`Their traits changed randomly each generation`]},
+    {l:"Understand", t:"Mendelian Genetics", q:`Why did Mendel need to let the F1 generation self-fertilize to determine whether the white-flower trait was transmitted?`, o:[`Because F1 plants all appeared violet, so only observing their offspring (F2) could reveal whether the white trait was still present but hidden`,`Because F1 plants cannot self-fertilize at all`,`Because self-fertilization always eliminates recessive traits`,`Because the P generation could not be cross-fertilized`]},
+    {l:"Understand", t:"Mendelian Genetics", q:`Why does a heterozygous genotype (Vv) display the dominant phenotype rather than a blended phenotype?`, o:[`The Law of Dominance states the dominant allele is expressed in the phenotype while the recessive allele stays hidden`,`Heterozygous genotypes always show the recessive trait instead`,`Vv genotypes are biologically identical to vv genotypes`,`Dominant and recessive alleles blend evenly in appearance`]},
+    {l:"Understand", t:"Mendelian Genetics", q:`Why must paired alleles separate into different gametes during meiosis, per the Law of Segregation?`, o:[`Each gamete must carry only one allele per gene so fertilization restores the paired number in offspring`,`Alleles are destroyed during meiosis`,`Gametes always carry both alleles together`,`Segregation only applies to dominant alleles`]},
+    {l:"Understand", t:"Mendelian Genetics", q:`In the albinism example, why did two phenotypically normal parents have an albino child?`, o:[`Both parents were heterozygous carriers expressing only the dominant (normal) phenotype, but each passed the recessive allele to the child`,`Both parents were homozygous recessive themselves`,`Albinism is dominant, so at least one parent must have shown it`,`The child's albinism was unrelated to parental genotypes`]},
+    {l:"Apply", t:"Mendelian Genetics", q:`A true-breeding violet-flowered pea plant is crossed with a true-breeding white-flowered plant. What would you expect the F1 flower color to be?`, o:[`All violet`,`All white`,`A mix of violet and white`,`Pink, a blend of the two`]},
+    {l:"Apply", t:"Mendelian Genetics", q:`For seed color, Y (yellow, dominant) and y (green, recessive): an F1 plant with genotype Yy self-fertilizes. What F2 phenotype ratio would you expect?`, o:[`Approximately 3 yellow : 1 green`,`Approximately 1 yellow : 3 green`,`All yellow, no green`,`All green, no yellow`]},
+    {l:"Apply", t:"Mendelian Genetics", q:`Using the Law of Pair of Factors notation, what genotype results from combining one dominant allele (V) and one recessive allele (v)?`, o:[`Vv`,`VV`,`vv`,`vV cannot occur`]},
+    {l:"Apply", t:"Mendelian Genetics", q:`A Punnett square is being built for a parent with genotype Aa. How many different alleles should be placed along that parent's side of the square?`, o:[`Two — one A and one a, since alleles separate into different gametes`,`Four — all possible combinations`,`One — only the dominant allele is used`,`Zero — Aa parents don't appear in Punnett squares`]},
+    {l:"Apply", t:"Mendelian Genetics", q:`A geneticist crosses two pea plants that differ in a single trait — flower color only. What type of cross is this?`, o:[`A monohybrid cross`,`A dihybrid cross`,`A trihybrid cross`,`A test cross exclusively`]},
+    {l:"Analyze", t:"Mendelian Genetics", q:`Comparing F1 (all violet) and F2 (violet + white) in Mendel's cross, what does the reappearance of white in F2 reveal?`, o:[`The white trait was transmitted to F1 but remained hidden (recessive), only reappearing once two carriers were crossed`,`The white trait was destroyed in P and randomly regenerated in F2`,`F1 plants were not truly descended from the P generation`,`White is dominant over violet, contradicting the F1 results`]},
+    {l:"Analyze", t:"Mendelian Genetics", q:`With F2 genotypes 25% YY, 50% Yy, 25% yy yielding ~75% yellow, ~25% green phenotypes, what does this reveal about genotype vs. phenotype ratios?`, o:[`They're not always the same, since both YY and Yy genotypes produce the identical yellow phenotype`,`Genotypic and phenotypic ratios are always identical`,`Only YY genotypes can produce a yellow phenotype`,`Phenotype ratios are unrelated to genotype ratios entirely`]},
+    {l:"Analyze", t:"Mendelian Genetics", q:`Why is meiosis — specifically anaphase I — identified as the cellular basis of the Law of Segregation?`, o:[`Homologous chromosomes, each carrying different alleles, physically separate into different daughter cells during anaphase I`,`Anaphase I is when chromosomes duplicate, not separate`,`Meiosis has no connection to how alleles are inherited`,`Segregation happens only during mitosis, not meiosis`]},
+    {l:"Analyze", t:"Mendelian Genetics", q:`Why would self-fertilization be especially useful for establishing true-breeding pea lines?`, o:[`Since the plant is hermaphroditic, self-fertilization lets a single plant's own alleles combine, helping fix consistently-expressed homozygous traits over generations`,`Self-fertilization always introduces new genetic variation from another plant`,`Self-fertilization is biologically identical to cross-fertilization in every respect`,`True-breeding lines require cross-fertilization exclusively`]},
+    {l:"Analyze", t:"Mendelian Genetics", q:`In a Punnett square, why are a parent's alleles placed separately along the top/side of the grid rather than kept as a pair?`, o:[`Each gamete carries only one allele per gene (per the Law of Segregation), so separating them models how gametes combine at fertilization`,`Punnett squares ignore the Law of Segregation entirely`,`Alleles must be kept as pairs at all times in a Punnett square`,`Only recessive alleles are placed on the grid`]},
+    {l:"Evaluate", t:"Mendelian Genetics", q:`"Mendel's laws only apply to pea plants, not to other organisms or humans." Evaluate, considering peas are described as a "model organism."`, o:[`Weak — a model organism is explicitly described as one used for research that applies to other organisms, implying the laws extend beyond peas`,`Correct — the laws are stated to apply only to Pisum sativum`,`Correct — model organisms by definition cannot generalize to other species`,`Irrelevant — Mendel's laws have no described scope at all`]},
+    {l:"Evaluate", t:"Mendelian Genetics", q:`"Since Vv and VV both show the dominant phenotype, they must be genetically identical." Evaluate using genotype/phenotype distinction.`, o:[`Flawed — genotype (VV vs. Vv) and phenotype (both dominant-appearing) are explicitly distinguished; identical phenotype doesn't mean identical genotype`,`Valid — phenotype and genotype are defined as the same thing`,`Valid — Vv and VV always produce different phenotypes, proving they're identical`,`Irrelevant — the lecture doesn't distinguish genotype from phenotype`]},
+    {l:"Evaluate", t:"Mendelian Genetics", q:`"The Law of Dominance and the Law of Segregation describe the same biological event." Assess this claim.`, o:[`Inaccurate — Dominance concerns which allele is expressed in phenotype, while Segregation concerns how paired alleles physically separate into gametes; distinct phenomena`,`Accurate — both laws describe allele separation during meiosis`,`Accurate — both laws describe phenotype expression exclusively`,`Irrelevant — neither law is defined in the lecture`]},
+    {l:"Evaluate", t:"Mendelian Genetics", q:`"Since F1 plants were all violet, the white allele must have been eliminated from the population entirely." Evaluate.`, o:[`Incorrect — the reappearance of white in F2 shows the allele persisted in F1, simply hidden because violet is dominant`,`Correct — F2 plants could not possibly show white if F1 was all violet`,`Correct — recessive alleles are always eliminated within one generation`,`Irrelevant — allele persistence is not addressed by Mendel's results`]},
+    {l:"Evaluate", t:"Mendelian Genetics", q:`"A monohybrid cross and a Punnett square are two names for the exact same concept." Evaluate using the lecture's definitions.`, o:[`Inaccurate — a monohybrid cross is a type of genetic cross, while a Punnett square is a tool used to show inheritance probabilities for such a cross; experiment vs. analysis method`,`Accurate — both terms describe an identical single concept`,`Accurate — a Punnett square is a type of organism cross`,`Irrelevant — neither term is defined in the lecture`]},
+    {l:"Create", t:"Mendelian Genetics", q:`Designing a study aid comparing Mendel's terms, which pairing correctly matches "P" and "F2" to their definitions?`, o:[`P = parental generation; F2 = second-generation offspring (from F1 self-fertilization)`,`P = first-generation offspring; F2 = parental generation`,`P = second-generation offspring; F2 = parental generation`,`P and F2 both refer to the same generation`]},
+    {l:"Create", t:"Mendelian Genetics", q:`Constructing a Punnett square for Vv x Vv, which genotype ratio should correctly fill the four squares?`, o:[`1 VV : 2 Vv : 1 vv`,`4 VV, no other genotypes`,`4 vv, no other genotypes`,`2 VV : 2 vv, with no Vv`]},
+    {l:"Create", t:"Mendelian Genetics", q:`Propose a short-answer item on the Law of Pair of Factors, and identify its correct answer.`, o:[`"How many heritable factors do we inherit per feature, and from how many parents?" — Answer: two alleles, one from each parent`,`Answer: one allele, from only one parent`,`Answer: three alleles, from three sources`,`Answer: zero alleles; traits arise spontaneously`]},
+    {l:"Create", t:"Mendelian Genetics", q:`Building a mnemonic for the three genotype categories from the lecture, which set correctly represents them?`, o:[`Homozygous dominant (VV), Heterozygous (Vv), Homozygous recessive (vv)`,`Homozygous dominant, Polygenic, Epistatic`,`Heterozygous, Pleiotropic, Aneuploid`,`Dominant, Recessive, Co-dominant only`]},
+    {l:"Create", t:"Mendelian Genetics", q:`Create a case item: "A pea plant has genotype Yy for seed color (Y=yellow dominant)." What phenotype should the correct answer describe?`, o:[`Yellow seeds, since the dominant Y allele is expressed over the recessive y allele`,`Green seeds, since heterozygotes always show the recessive trait`,`A blend of yellow and green seeds`,`No seed color can be determined from genotype alone`]},
+
+    {l:"Remember", t:"Sex Determination & Gene Interaction", q:`What is "primary sex determination" defined as in the lecture?`, o:[`The determination of the gonads`,`The determination of behavioral traits`,`The determination of blood type`,`The determination of eye color`]},
+    {l:"Remember", t:"Sex Determination & Gene Interaction", q:`What term describes distinguishing male vs. female in animals using their gonads?`, o:[`Sexing`,`Genotyping`,`Karyotyping`,`Pleiotropy`]},
+    {l:"Remember", t:"Sex Determination & Gene Interaction", q:`Which prenatal technique involves a venipuncture on the mother to analyze small amounts of fetal DNA in her blood?`, o:[`Cell-free fetal DNA testing`,`Chorionic villus sampling`,`Amniocentesis`,`Obstetric ultrasonography`]},
+    {l:"Remember", t:"Sex Determination & Gene Interaction", q:`What is epistasis, as defined in the lecture?`, o:[`A genetic phenomenon where the effect of a gene is modified or masked by one or more other (modifier) genes`,`A genetic phenomenon where a single gene influences multiple unrelated traits`,`A gene whose individual effect on phenotype is too small to observe alone`,`An abnormal number of chromosomes`]},
+    {l:"Remember", t:"Sex Determination & Gene Interaction", q:`Which single-gene disorder is given as a well-known example of pleiotropy, caused by a mutation on chromosome 12 affecting phenylalanine hydroxylase?`, o:[`Phenylketonuria (PKU)`,`Cri-du-chat syndrome`,`Charcot-Marie-Tooth disease`,`Down syndrome`]},
+    {l:"Understand", t:"Sex Determination & Gene Interaction", q:`Why is primary sex determination described as "strictly chromosomal" and not usually influenced by environment in mammals?`, o:[`The gonads (which define primary sex) are determined by chromosomal mechanisms rather than external/environmental factors in mammals`,`Mammals have no chromosomal basis for sex at all`,`Environment is the sole determinant of mammalian sex`,`Gonads form randomly regardless of chromosomes`]},
+    {l:"Understand", t:"Sex Determination & Gene Interaction", q:`Why is genetic sequencing useful for detecting "rare genetic events," such as a male animal with an incomplete Y chromosome having female gonads?`, o:[`It can reveal a mismatch between chromosomal sex and gonadal/phenotypic sex that gonadal "sexing" alone would miss`,`It only confirms what sexing already shows, with no added detail`,`Gonads are always genetically identical to chromosomal sex`,`Sequencing cannot detect Y chromosome abnormalities`]},
+    {l:"Understand", t:"Sex Determination & Gene Interaction", q:`Why does the lecture describe polygene effects as individually unobservable, yet collectively producing visible variation?`, o:[`Each polygene contributes only a small effect alone, but combined with others, their cumulative effect becomes observable`,`Polygenes have no effect on phenotype under any circumstance`,`A single polygene always fully determines a trait by itself`,`Polygenes only function in prokaryotic organisms`]},
+    {l:"Understand", t:"Sex Determination & Gene Interaction", q:`In the fur-color epistasis example (C=black dominant, A=a gene controlling the fur-color genes), why does AaCc produce brown fur instead of black?`, o:[`The dominant A allele suppresses the dominant C (black) gene's expression, resulting in brown instead`,`A and C are alleles of the exact same gene`,`C is recessive in this genotype`,`Brown fur requires two copies of the A allele`]},
+    {l:"Understand", t:"Sex Determination & Gene Interaction", q:`Why can a mutation in a single pleiotropic gene, like the PKU mutation, affect multiple unrelated body systems?`, o:[`The gene product may be used in various cells and affect different biological targets through shared signaling pathways`,`Pleiotropic genes only affect one system despite the name`,`PKU is caused by mutations in multiple unrelated genes, not one`,`Gene products never interact with more than one cell type`]},
+    {l:"Apply", t:"Sex Determination & Gene Interaction", q:`A medical team checks a fetus for genetic abnormalities using a placental tissue sample, accepting a more invasive procedure than a blood draw. Which technique is this?`, o:[`Chorionic villus sampling (CVS)`,`Cell-free fetal DNA testing`,`Obstetric ultrasonography`,`Routine maternal blood glucose testing`]},
+    {l:"Apply", t:"Sex Determination & Gene Interaction", q:`A scientist finds an animal has male gonads but an incomplete Y chromosome, discovered only through sequencing. Which method revealed this rare event?`, o:[`Genetic sequencing`,`Gonadal sexing alone`,`Obstetric ultrasonography`,`Amniocentesis`]},
+    {l:"Apply", t:"Sex Determination & Gene Interaction", q:`A geneticist observes that a mutation in one gene disrupts nervous system development, skin pigmentation, and skeletal growth simultaneously. Which phenomenon does this best illustrate?`, o:[`Pleiotropy`,`Epistasis alone, without pleiotropy`,`Aneuploidy`,`Polyploidy`]},
+    {l:"Apply", t:"Sex Determination & Gene Interaction", q:`A dog's coat color depends on a "modifier gene" that suppresses expression of the main coat-color gene. Which phenomenon best describes this?`, o:[`Epistasis`,`Pleiotropy`,`Polyploidy`,`Translocation`]},
+    {l:"Apply", t:"Sex Determination & Gene Interaction", q:`A trait is influenced by many genes, each with a very small individually-unnoticeable effect, together producing a continuous range (like height). Which term fits?`, o:[`Polygenic inheritance (via polygenes)`,`A single dominant gene effect`,`Pure epistasis`,`Chromosomal translocation`]},
+    {l:"Analyze", t:"Sex Determination & Gene Interaction", q:`Comparing "sexing" (via gonads) and genetic sequencing, what advantage does sequencing offer that gonadal sexing lacks?`, o:[`Sequencing can detect rare mismatches between chromosomal sex and gonadal appearance, which gonad-based sexing alone would miss`,`Sexing is always more precise than sequencing`,`Both methods are functionally identical in every case`,`Sequencing cannot be used in humans, only in animals`]},
+    {l:"Analyze", t:"Sex Determination & Gene Interaction", q:`Comparing epistasis and pleiotropy, what is the fundamental directional difference between the two?`, o:[`Epistasis involves one gene affecting the expression of another gene, while pleiotropy involves one gene affecting multiple traits directly`,`Both describe a single gene affecting a single trait`,`Epistasis and pleiotropy are simply two names for an identical phenomenon`,`Epistasis involves multiple genes affecting multiple traits with no gene ever suppressing another`]},
+    {l:"Analyze", t:"Sex Determination & Gene Interaction", q:`Of the three causes of pleiotropy, what distinguishes developmental pleiotropy from gene pleiotropy?`, o:[`Developmental pleiotropy arises from mutations producing several phenotypic effects during development, while gene pleiotropy arises from a gene product interacting with multiple proteins or catalyzing different reactions`,`They are identical mechanisms with different names`,`Developmental pleiotropy only occurs in plants`,`Gene pleiotropy only affects evolutionary fitness, never protein interactions`]},
+    {l:"Analyze", t:"Sex Determination & Gene Interaction", q:`Why might pleiotropic mutations "limit the rate of multivariate evolution" when selection favors different alleles for different traits?`, o:[`A single pleiotropic gene affects multiple traits at once, so selecting a favorable allele for one trait may force an unfavorable change in another trait it also controls`,`Pleiotropic genes are immune to natural selection entirely`,`Pleiotropy only affects traits unrelated to fitness`,`Evolution cannot act on any gene affecting more than one trait`]},
+    {l:"Analyze", t:"Sex Determination & Gene Interaction", q:`PKU results from a single-gene mutation but affects both nervous and integumentary systems. What does this suggest about "one gene, one trait"?`, o:[`A single gene doesn't necessarily correspond to a single trait — one gene's product can influence multiple, seemingly unrelated systems`,`A single gene can only ever affect a single organ system`,`PKU proves genes never affect more than one system`,`The nervous and integumentary systems always share the exact same genetic basis`]},
+    {l:"Evaluate", t:"Sex Determination & Gene Interaction", q:`"Epistasis and polygenic inheritance are the same thing because both involve more than one gene." Evaluate this.`, o:[`Flawed — epistasis involves one gene masking/modifying another's expression, while polygenic inheritance involves many genes each with a small additive effect; the mechanisms differ`,`Valid — both terms are defined identically in the lecture`,`Valid — epistasis requires many genes with equal small effects, like polygenes`,`Irrelevant — neither concept involves more than one gene`]},
+    {l:"Evaluate", t:"Sex Determination & Gene Interaction", q:`"Since sex is usually assigned at birth, genetic and prenatal sex-determination methods are essentially pointless." Evaluate this claim.`, o:[`Weak — the lecture describes these methods as having real diagnostic and prenatal applications, such as detecting rare genetic events and informing prenatal care`,`Valid — the lecture states these methods have no real use`,`Valid — genetic sequencing is described as obsolete and unused`,`Irrelevant — prenatal determination is not discussed in the lecture`]},
+    {l:"Evaluate", t:"Sex Determination & Gene Interaction", q:`"Pleiotropic mutations are always harmless since they affect multiple traits at once, spreading out their impact." Assess this claim.`, o:[`Flawed — the lecture states pleiotropic mutations can sometimes be deleterious, especially when they negatively affect essential traits`,`Valid — the lecture states pleiotropic mutations are always neutral`,`Valid — affecting multiple traits always dilutes harm`,`Irrelevant — deleterious effects are not discussed in the lecture`]},
+    {l:"Evaluate", t:"Sex Determination & Gene Interaction", q:`"CVS and amniocentesis are described as equally non-invasive as cell-free fetal DNA testing." Evaluate against the lecture's descriptions.`, o:[`Inaccurate — CVS and amniocentesis are explicitly described as "rather invasive," in contrast to blood-draw-based cffDNA testing`,`Accurate — all three methods are described identically as non-invasive`,`Accurate — cffDNA testing is described as the most invasive method`,`Irrelevant — invasiveness is not addressed for any of these methods`]},
+    {l:"Create", t:"Sex Determination & Gene Interaction", q:`Designing a table of prenatal sex-determination techniques, which pairing correctly matches "obstetric ultrasonography" to its described marker?`, o:[`Checks for the sagittal sign as a marker of fetal sex`,`Analyzes cell-free fetal DNA in maternal blood`,`Samples chorionic villi from the placenta`,`Requires amniotic fluid extraction`]},
+    {l:"Create", t:"Sex Determination & Gene Interaction", q:`Fill-in-the-blank: "A gene whose individual effect on phenotype is too small to observe alone, but which acts with others to produce observable variation, is called a ____." Correct term?`, o:[`Polygene`,`Pleiotropic gene`,`Epistatic gene`,`Aneuploid gene`]},
+    {l:"Create", t:"Sex Determination & Gene Interaction", q:`Designing a concept map of "one gene → multiple traits" vs. "one trait → multiple genes," which correctly labels each relationship?`, o:[`One gene → multiple traits = pleiotropy; one trait → multiple genes = polygenic inheritance`,`One gene → multiple traits = polygenic inheritance; one trait → multiple genes = pleiotropy`,`Both relationships are called epistasis`,`Neither relationship has a specific term in genetics`]},
+    {l:"Create", t:"Sex Determination & Gene Interaction", q:`Vignette: "A coat-color gene's expression is completely masked whenever a specific second gene is present, regardless of the coat-color gene's own alleles." Which term fits?`, o:[`Epistasis`,`Pleiotropy`,`Polygenic inheritance`,`Aneuploidy`]},
+
+    {l:"Remember", t:"Cytogenetics & Chromosomal Mutations", q:`What is a chromosomal mutation, as defined in the lecture?`, o:[`An alteration in the number or structure of chromosomes that affects large segments of DNA`,`A single nucleotide substitution within one gene`,`A change in protein folding without DNA involvement`,`A temporary, non-heritable change in gene expression`]},
+    {l:"Remember", t:"Cytogenetics & Chromosomal Mutations", q:`Chromosomal mutations are broadly divided into which two categories?`, o:[`Structural and numerical`,`Dominant and recessive`,`Autosomal and mitochondrial only`,`Polygenic and monogenic`]},
+    {l:"Remember", t:"Cytogenetics & Chromosomal Mutations", q:`Which structural chromosomal mutation involves a segment of a chromosome being lost entirely?`, o:[`Deletion`,`Duplication`,`Inversion`,`Translocation`]},
+    {l:"Remember", t:"Cytogenetics & Chromosomal Mutations", q:`Which structural mutation involves a segment of one chromosome breaking off and attaching to a different, non-homologous chromosome?`, o:[`Translocation`,`Deletion`,`Duplication`,`Inversion`]},
+    {l:"Remember", t:"Cytogenetics & Chromosomal Mutations", q:`What term describes having more than the normal number of chromosome sets, e.g. three or four sets instead of two?`, o:[`Polyploidy`,`Aneuploidy`,`Epistasis`,`Pleiotropy`]},
+    {l:"Understand", t:"Cytogenetics & Chromosomal Mutations", q:`Why can chromosomal mutations lead to genetic disorders or cancer, according to the lecture?`, o:[`They affect large segments of DNA, altering chromosome number or structure rather than just a single small region`,`They only ever affect a single nucleotide`,`Chromosomal mutations never involve DNA at all`,`They exclusively affect non-coding regions with no phenotypic consequence`]},
+    {l:"Understand", t:"Cytogenetics & Chromosomal Mutations", q:`Why is deletion described as having potentially "severe consequences" compared to some other structural mutations?`, o:[`Deletion results in the loss of genetic material entirely, unlike duplication, which retains all original material plus a copy`,`Deletion always adds extra genetic material`,`Deletion never affects any genetic material`,`Deletion and duplication have identical consequences`]},
+    {l:"Understand", t:"Cytogenetics & Chromosomal Mutations", q:`Why can a "balanced inversion" often have no effect on the carrier but still cause issues for their offspring?`, o:[`The carrier retains all their original genetic material (just reordered), while offspring may inherit unbalanced combinations`,`Inversions always delete genetic material immediately`,`Inversions only ever affect the carrier and never any offspring`,`Balanced inversions convert into numerical mutations in offspring`]},
+    {l:"Understand", t:"Cytogenetics & Chromosomal Mutations", q:`What is the key structural difference between aneuploidy and polyploidy?`, o:[`Aneuploidy involves an abnormal number of individual chromosomes (extra or missing), while polyploidy involves extra complete sets of chromosomes`,`Aneuploidy and polyploidy describe the exact same numerical change`,`Aneuploidy involves extra chromosome sets, polyploidy involves single missing chromosomes`,`Neither term involves a change in chromosome number`]},
+    {l:"Understand", t:"Cytogenetics & Chromosomal Mutations", q:`Why is Cri-du-chat syndrome classified as a structural, rather than numerical, chromosomal mutation?`, o:[`It results from a deletion — the loss of a chromosome segment — rather than a change in the total number of chromosomes`,`It involves an extra full chromosome`,`It involves an entire missing chromosome set`,`It is unrelated to any chromosomal change`]},
+    {l:"Apply", t:"Cytogenetics & Chromosomal Mutations", q:`A patient's karyotype shows a missing segment on chromosome 5. Which syndrome would this finding be consistent with, per the lecture?`, o:[`Cri-du-chat syndrome`,`Charcot-Marie-Tooth disease`,`Down syndrome`,`Turner syndrome`]},
+    {l:"Apply", t:"Cytogenetics & Chromosomal Mutations", q:`A patient's genetic testing reveals a duplicated segment on chromosome 17. Which condition would this be consistent with?`, o:[`Charcot-Marie-Tooth disease`,`Cri-du-chat syndrome`,`Klinefelter syndrome`,`Edwards syndrome`]},
+    {l:"Apply", t:"Cytogenetics & Chromosomal Mutations", q:`A chromosome segment breaks off, flips, and reattaches in reverse order within the same chromosome. Which mutation type is this?`, o:[`Inversion`,`Deletion`,`Duplication`,`Translocation`]},
+    {l:"Apply", t:"Cytogenetics & Chromosomal Mutations", q:`A cell is found to have three full sets of chromosomes instead of the usual two. Which numerical mutation category is this?`, o:[`Polyploidy`,`Aneuploidy`,`A structural deletion`,`A balanced translocation`]},
+    {l:"Apply", t:"Cytogenetics & Chromosomal Mutations", q:`A patient has one extra individual chromosome beyond the normal count, but not an entire extra set. Which term classifies this?`, o:[`Aneuploidy`,`Polyploidy`,`Inversion`,`Translocation`]},
+    {l:"Analyze", t:"Cytogenetics & Chromosomal Mutations", q:`Comparing deletion and duplication, both alter the amount of genetic material, but in opposite directions. What is this contrast?`, o:[`Deletion removes genetic material (loss), while duplication adds extra genetic material (a copied segment)`,`Both deletion and duplication remove genetic material identically`,`Both deletion and duplication add genetic material identically`,`Deletion adds material while duplication removes it`]},
+    {l:"Analyze", t:"Cytogenetics & Chromosomal Mutations", q:`Comparing inversion and translocation, both involve a chromosome segment breaking off — what differentiates where the segment ends up?`, o:[`In inversion, the segment reattaches to the same chromosome in reverse order; in translocation, it attaches to a different, non-homologous chromosome`,`In inversion, the segment is permanently lost; in translocation, it is duplicated`,`Both mutations always result in the segment being lost entirely`,`Both mutations always involve reattachment to the same chromosome in the same orientation`]},
+    {l:"Analyze", t:"Cytogenetics & Chromosomal Mutations", q:`Chromosomal mutations affect "large segments of DNA." What does this imply about their impact compared to a single-gene mutation?`, o:[`A chromosomal mutation can disrupt or alter many genes at once, since it affects a whole segment rather than one isolated gene`,`Chromosomal mutations by definition affect only one gene, just like point mutations`,`Large-segment changes have no more impact than single-nucleotide changes`,`Chromosomal mutations cannot affect gene function at all`]},
+    {l:"Analyze", t:"Cytogenetics & Chromosomal Mutations", q:`Aneuploidy involves one extra/missing chromosome, while polyploidy involves extra whole sets. What does comparing them reveal about chromosome-to-gene dosage balance?`, o:[`Aneuploidy specifically unbalances the ratio between one chromosome and all others, while polyploidy keeps sets proportional to each other even though the total is increased`,`Aneuploidy and polyploidy always cause identical dosage effects`,`Polyploidy never changes any chromosome-related ratio`,`Aneuploidy always leaves every chromosome pair perfectly balanced`]},
+    {l:"Analyze", t:"Cytogenetics & Chromosomal Mutations", q:`Cri-du-chat (deletion, chr 5) and Charcot-Marie-Tooth (duplication, chr 17) are both structural but opposite in DNA change. What does comparing them reveal?`, o:[`Structural mutations can produce distinct clinical disorders through fundamentally different mechanisms — loss versus gain of material — even under one "structural" category`,`All structural mutations produce identical clinical outcomes regardless of mechanism`,`Only deletions are capable of causing a named clinical syndrome`,`Duplications and deletions are simply alternate names for the same mutation type`]},
+    {l:"Evaluate", t:"Cytogenetics & Chromosomal Mutations", q:`"Since a balanced inversion causes no effect on the carrier, it can never affect that person's children either." Evaluate this claim.`, o:[`Flawed — the lecture explicitly states balanced inversions can cause issues for the carrier's offspring, even without affecting the carrier`,`Valid — the lecture states inversions never affect offspring under any circumstance`,`Valid — carriers and their offspring always share identical outcomes`,`Irrelevant — offspring effects are not discussed for inversions`]},
+    {l:"Evaluate", t:"Cytogenetics & Chromosomal Mutations", q:`"Numerical and structural chromosomal mutations are essentially interchangeable terms for the same category." Evaluate this claim.`, o:[`Inaccurate — structural mutations change chromosome structure (deletion, duplication, inversion, translocation), while numerical mutations change chromosome count (aneuploidy, polyploidy); distinct categories`,`Accurate — both terms describe changes in chromosome structure only`,`Accurate — both terms describe changes in chromosome number only`,`Irrelevant — the lecture does not distinguish these categories`]},
+    {l:"Evaluate", t:"Cytogenetics & Chromosomal Mutations", q:`"Since deletion causes severe consequences, duplication must be entirely harmless since it doesn't lose material." Assess using the Charcot-Marie-Tooth example.`, o:[`Flawed — the lecture presents Charcot-Marie-Tooth disease as a real clinical consequence of a chromosome 17 duplication, showing duplication can also cause disease`,`Valid — the lecture states duplications never cause any disease`,`Valid — Charcot-Marie-Tooth is caused by a deletion, not a duplication, proving duplications are harmless`,`Irrelevant — duplication outcomes are not discussed in the lecture`]},
+    {l:"Create", t:"Cytogenetics & Chromosomal Mutations", q:`Designing a reference chart of "Structural Mutation → Definition," which pairing correctly matches "Translocation"?`, o:[`A segment of one chromosome breaks off and attaches to a different, non-homologous chromosome`,`A segment of a chromosome is lost entirely`,`A segment of a chromosome is copied, adding extra material`,`A segment breaks off, flips, and reattaches in reverse order on the same chromosome`]},
+    {l:"Create", t:"Cytogenetics & Chromosomal Mutations", q:`Constructing a matching exercise, which pairing correctly links "Cri-du-chat syndrome" to its chromosomal cause?`, o:[`Deletion on chromosome 5`,`Duplication on chromosome 17`,`An extra chromosome set (polyploidy)`,`A translocation involving chromosome 21`]},
+    {l:"Create", t:"Cytogenetics & Chromosomal Mutations", q:`Classification item: "A patient's cells contain 69 chromosomes instead of the usual 46 — a complete extra set." Which term should the correct answer use?`, o:[`Polyploidy (specifically triploidy)`,`Aneuploidy`,`A balanced inversion`,`A simple deletion`]}
+  ];
+
+  var FULL_TOTAL = QUESTIONS.length;
+  var LETTERS = ["A","B","C","D"];
+
+  var startScreen = document.getElementById('startScreen');
+  var quizScreen = document.getElementById('quizScreen');
+  var resultsScreen = document.getElementById('resultsScreen');
+  var startBtn = document.getElementById('startBtn');
+
+  var qCounter = document.getElementById('qCounter');
+  var scoreLive = document.getElementById('scoreLive');
+  var progressFill = document.getElementById('progressFill');
+  var timerFill = document.getElementById('timerFill');
+  var timerNum = document.getElementById('timerNum');
+  var levelBadge = document.getElementById('levelBadge');
+  var topicBadge = document.getElementById('topicBadge');
+  var retryBadge = document.getElementById('retryBadge');
+  var qText = document.getElementById('qText');
+  var optionsWrap = document.getElementById('optionsWrap');
+  var feedbackLine = document.getElementById('feedbackLine');
+
+  var deck = [];
+  var idx = 0;
+  var score = 0;
+  var answered = false;
+  var timeLeft = 60;
+  var timerInt = null;
+  var currentCorrectIdx = 0;
+  var currentShuffled = [];
+  var lastCorrectLetter = -1;
+  var mode = 'full';
+
+  var levelStats = {};
+  var missed = [];
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function resetFullState(){
+    idx = 0; score = 0; missed = [];
+    levelStats = {};
+    ["Remember","Understand","Apply","Analyze","Evaluate","Create"].forEach(function(l){
+      levelStats[l] = {correct:0, total:0};
+    });
+    lastCorrectLetter = -1;
+  }
+
+  function shuffleOptionsFor(item){
+    var pairs = item.o.map(function(text, i){ return {text: text, isCorrect: i === 0}; });
+    var shuffled = shuffle(pairs);
+    var correctIdx = shuffled.findIndex(function(p){ return p.isCorrect; });
+    var attempts = 0;
+    while (correctIdx === lastCorrectLetter && attempts < 6) {
+      shuffled = shuffle(pairs);
+      correctIdx = shuffled.findIndex(function(p){ return p.isCorrect; });
+      attempts++;
+    }
+    lastCorrectLetter = correctIdx;
+    return { options: shuffled.map(function(p){ return p.text; }), correctIdx: correctIdx };
+  }
+
+  function escapeHtml(str){
+    var d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function renderQuestion(){
+    clearInterval(timerInt);
+    answered = false;
+    timeLeft = 60;
+    var item = deck[idx];
+    var r = shuffleOptionsFor(item);
+    currentShuffled = r.options;
+    currentCorrectIdx = r.correctIdx;
+
+    qCounter.textContent = "Question " + (idx + 1) + " of " + deck.length;
+    scoreLive.textContent = "Score: " + score;
+    progressFill.style.width = ((idx) / deck.length * 100) + "%";
+
+    levelBadge.textContent = item.l;
+    levelBadge.style.background = LEVEL_COLOR[item.l] || "var(--accent)";
+    topicBadge.textContent = item.t;
+    retryBadge.classList.toggle('hidden', mode !== 'retry');
+    qText.textContent = item.q;
+    feedbackLine.textContent = "";
+    feedbackLine.className = "feedback-line";
+
+    optionsWrap.innerHTML = "";
+    currentShuffled.forEach(function(text, i){
+      var btn = document.createElement('button');
+      btn.className = "option-btn";
+      btn.innerHTML = '<span class="letter">' + LETTERS[i] + '</span><span>' + escapeHtml(text) + '</span>';
+      btn.addEventListener('click', function(){ selectOption(i); });
+      optionsWrap.appendChild(btn);
+    });
+
+    timerFill.style.transition = "none";
+    timerFill.style.width = "100%";
+    timerFill.style.background = "var(--apply)";
+    timerNum.textContent = "60s";
+    void timerFill.offsetWidth;
+    timerFill.style.transition = "width 1s linear, background 0.3s ease";
+
+    timerInt = setInterval(tick, 1000);
+  }
+
+  function tick(){
+    timeLeft -= 1;
+    if (timeLeft < 0) timeLeft = 0;
+    var pct = (timeLeft / 60) * 100;
+    timerFill.style.width = pct + "%";
+    timerNum.textContent = timeLeft + "s";
+    if (timeLeft <= 10) { timerFill.style.background = "var(--incorrect)"; }
+    else if (timeLeft <= 25) { timerFill.style.background = "var(--analyze)"; }
+    else { timerFill.style.background = "var(--apply)"; }
+
+    if (timeLeft <= 0) {
+      clearInterval(timerInt);
+      if (!answered) handleTimeout();
+    }
+  }
+
+  function lockButtons(){
+    var btns = optionsWrap.querySelectorAll('.option-btn');
+    btns.forEach(function(b){ b.style.pointerEvents = "none"; });
+    return btns;
+  }
+
+  function recordStat(item, wasCorrect){
+    if (mode !== 'full') return;
+    levelStats[item.l].total += 1;
+    if (wasCorrect) levelStats[item.l].correct += 1;
+  }
+
+  function selectOption(i){
+    if (answered) return;
+    answered = true;
+    clearInterval(timerInt);
+    var item = deck[idx];
+    var btns = lockButtons();
+    var wasCorrect = (i === currentCorrectIdx);
+
+    btns[currentCorrectIdx].classList.add('correct');
+    if (!wasCorrect) btns[i].classList.add('incorrect');
+    btns.forEach(function(b, bi){
+      if (bi !== i && bi !== currentCorrectIdx) b.classList.add('dim');
+    });
+
+    if (wasCorrect) {
+      score += 1;
+      feedbackLine.textContent = "✓ Correct!";
+      feedbackLine.className = "feedback-line ok";
+    } else {
+      feedbackLine.textContent = "✗ Not quite — correct answer highlighted";
+      feedbackLine.className = "feedback-line no";
+      missed.push({item: item, your: currentShuffled[i]});
+    }
+    recordStat(item, wasCorrect);
+    scoreLive.textContent = "Score: " + score;
+    setTimeout(nextQuestion, 1500);
+  }
+
+  function handleTimeout(){
+    answered = true;
+    var item = deck[idx];
+    var btns = lockButtons();
+    btns[currentCorrectIdx].classList.add('correct');
+    btns.forEach(function(b, bi){
+      if (bi !== currentCorrectIdx) b.classList.add('dim');
+    });
+    feedbackLine.textContent = "⏱ Time's up — correct answer highlighted";
+    feedbackLine.className = "feedback-line no";
+    missed.push({item: item, your: "No answer (timed out)"});
+    recordStat(item, false);
+    setTimeout(nextQuestion, 1500);
+  }
+
+  function nextQuestion(){
+    idx += 1;
+    if (idx >= deck.length) {
+      showResults();
+    } else {
+      renderQuestion();
+    }
+  }
+
+  function showResults(){
+    quizScreen.classList.add('hidden');
+    resultsScreen.classList.remove('hidden');
+
+    var heroLabel = document.getElementById('heroLabel');
+    var finalScore = document.getElementById('finalScore');
+    var finalDenom = document.getElementById('finalDenom');
+    var finalPct = document.getElementById('finalPct');
+    var mastered = FULL_TOTAL - missed.length;
+
+    if (mode === 'full') {
+      heroLabel.textContent = "Prince's final score";
+      finalScore.textContent = score;
+      finalDenom.textContent = "/" + FULL_TOTAL;
+      finalPct.textContent = Math.round((score / FULL_TOTAL) * 100) + "% on the first pass";
+    } else {
+      heroLabel.textContent = "Retry round complete";
+      finalScore.textContent = score;
+      finalDenom.textContent = "/" + deck.length;
+      finalPct.textContent = "Mastered " + mastered + " of " + FULL_TOTAL + " overall";
+    }
+
+    var statsGrid = document.getElementById('statsGrid');
+    statsGrid.innerHTML = "";
+    ["Remember","Understand","Apply","Analyze","Evaluate","Create"].forEach(function(l){
+      var s = levelStats[l];
+      var cell = document.createElement('div');
+      cell.className = "stat-cell";
+      cell.innerHTML = '<div class="lvl" style="color:' + LEVEL_COLOR[l] + '">' + l + '</div><div class="num">' + s.correct + ' / ' + s.total + '</div>';
+      statsGrid.appendChild(cell);
+    });
+
+    var reviewBlock = document.getElementById('reviewBlock');
+    reviewBlock.innerHTML = "";
+    if (missed.length > 0) {
+      var title = document.createElement('div');
+      title.className = "review-title";
+      title.textContent = "Still to master — " + missed.length + " question" + (missed.length === 1 ? "" : "s");
+      reviewBlock.appendChild(title);
+      missed.forEach(function(m){
+        var it = m.item;
+        var row = document.createElement('div');
+        row.className = "review-item";
+        row.innerHTML = '<div class="rt" style="color:' + LEVEL_COLOR[it.l] + '">' + it.l + ' · ' + escapeHtml(it.t) + '</div>' +
+          '<div class="rq">' + escapeHtml(it.q) + '</div>' +
+          '<div class="ra">Correct: ' + escapeHtml(it.o[0]) + '</div>';
+        reviewBlock.appendChild(row);
+      });
+    } else {
+      var perfect = document.createElement('div');
+      perfect.style.textAlign = "center";
+      perfect.style.color = "var(--correct)";
+      perfect.style.fontWeight = "800";
+      perfect.style.margin = "10px 0";
+      perfect.textContent = "🎉 All " + FULL_TOTAL + " mastered — nothing left to retry.";
+      reviewBlock.appendChild(perfect);
+    }
+
+    var actionButtons = document.getElementById('actionButtons');
+    actionButtons.innerHTML = "";
+    if (missed.length > 0) {
+      var retryBtn = document.createElement('button');
+      retryBtn.className = "retry-btn";
+      retryBtn.textContent = "Retry These " + missed.length + " Question" + (missed.length === 1 ? "" : "s");
+      retryBtn.addEventListener('click', retryMissed);
+      actionButtons.appendChild(retryBtn);
+    }
+    var restartBtn = document.createElement('button');
+    restartBtn.className = "ghost-btn";
+    restartBtn.textContent = "Start a Fresh Quiz";
+    restartBtn.addEventListener('click', backToStart);
+    actionButtons.appendChild(restartBtn);
+  }
+
+  function retryMissed(){
+    var subset = missed.map(function(m){ return m.item; });
+    missed = [];
+    mode = 'retry';
+    deck = shuffle(subset);
+    idx = 0; score = 0;
+    resultsScreen.classList.add('hidden');
+    quizScreen.classList.remove('hidden');
+    renderQuestion();
+  }
+
+  function backToStart(){
+    resultsScreen.classList.add('hidden');
+    startScreen.classList.remove('hidden');
+  }
+
+  function startQuiz(){
+    mode = 'full';
+    deck = shuffle(QUESTIONS);
+    resetFullState();
+    startScreen.classList.add('hidden');
+    resultsScreen.classList.add('hidden');
+    quizScreen.classList.remove('hidden');
+    renderQuestion();
+  }
+
+  startBtn.addEventListener('click', startQuiz);
+})();
+</script>
+</body>
+</html>
